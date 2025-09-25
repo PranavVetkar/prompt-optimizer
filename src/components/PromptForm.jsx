@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import axios from "axios";
 
 const API_BASE = "http://127.0.0.1:8000";
 
@@ -41,15 +40,9 @@ export default function PromptForm() {
         throw new Error(`Server error: ${response.status}`);
       }
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder("utf-8");
+      const data = await response.json();
+      setResult(data);
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        setResult((prev) => prev + chunk); // append new text
-      }
     } catch (err) {
       setError("Failed to connect to backend or stream data.");
     }
@@ -115,7 +108,18 @@ export default function PromptForm() {
           <pre className="bg-light p-3">{result.original_prompt}</pre>
 
           <h4>Elaborated Prompt</h4>
-          <pre className="bg-dark text-white p-3">{result.elaborated_prompt}</pre>
+          <pre
+            className="bg-dark text-white p-3"
+            style={{
+              maxHeight: "400px",
+              overflowY: "auto",
+              overflowX: "auto",
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word"
+            }}
+          >
+            {result.elaborated_prompt}
+          </pre>
 
           <p>Token Count: {result.token_count}</p>
         </div>
