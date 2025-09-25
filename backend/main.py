@@ -5,25 +5,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
-# Configure Gemini API
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
-# Initialize FastAPI app
 app = FastAPI(title="Prompt Optimizer API")
 
-# Allow CORS for frontend
+FRONTEND_ORIGINS = os.getenv("FRONTEND_ORIGINS", "http://localhost:3000")
+origins = [o.strip() for o in FRONTEND_ORIGINS.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Change this to your frontend domain later for security
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins = origins,
+    allow_credentials = True,
+    allow_methods = ["*"],
+    allow_headers = ["*"],
 )
 
-# Pydantic Model for Request
 class PromptRequest(BaseModel):
     user_prompt: str
     tone: str = "neutral"
@@ -48,12 +46,10 @@ async def generate_response(request: PromptRequest):
         Optimized Prompt:
         """
         
-        # Use Gemini model
         model = genai.GenerativeModel('gemini-2.5-flash')
         response = model.generate_content(elaboration_prompt)
         elaborated_prompt = response.text
 
-        # Token count
         token_count = model.count_tokens(elaborated_prompt).total_tokens
         
         return {
